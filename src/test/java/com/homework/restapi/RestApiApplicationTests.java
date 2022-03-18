@@ -25,7 +25,7 @@ import com.homework.restapi.dto.result.PoolQueryResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class RestapiApplicationTests {
+class RestApiApplicationTests {
 
     @Autowired
     private MockMvc mockMvc;

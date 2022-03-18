@@ -1,54 +1,47 @@
-package com.homework.restapi.api.impl;
+package com.homework.restapi.service.impl;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
-import com.homework.restapi.api.PoolApi;
+import org.springframework.stereotype.Service;
+import com.homework.restapi.dao.PoolDAO;
 import com.homework.restapi.dto.request.PoolAppendRequest;
 import com.homework.restapi.dto.request.PoolQueryRequest;
 import com.homework.restapi.dto.result.PoolAppendResult;
 import com.homework.restapi.dto.result.PoolQueryResult;
+import com.homework.restapi.service.PoolService;
 
 /**
  *
  * @author hmm
  */
-@RestController
-public class PoolApiController implements PoolApi {
+@Service
+public class PoolServiceImpl implements PoolService {
 
-    private Map<Long, List<Long>> poolsMap = new HashMap<>();
+    @Autowired
+    private PoolDAO poolDAO;
 
     @Override
     public ResponseEntity<PoolAppendResult> append(PoolAppendRequest request) {
-
-        PoolAppendResult result = poolsMap.containsKey(request.getPoolId())
+        PoolAppendResult result = poolDAO.containPoolId(request.getPoolId())
                 ? PoolAppendResult.APPENDED
                 : PoolAppendResult.INSERTED;
 
-        poolsMap.computeIfAbsent(request.getPoolId(), v -> new LinkedList<>())
-                .addAll(Optional.ofNullable(request.getPoolValues()).orElse(new ArrayList<>()));
+        poolDAO.insertPoolMap(request.getPoolId(), request.getPoolValues());
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<PoolQueryResult> calculatePercentile(PoolQueryRequest request) {
-
         if (request.getPoolId() == null || request.getPercentile() == null ||
                 request.getPercentile() < 0 || request.getPercentile() > 100) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Long> values = poolsMap.get(request.getPoolId());
+        List<Long> values = poolDAO.getListValuesByPoolId(request.getPoolId());
         if (values == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
